@@ -1,7 +1,8 @@
 package okhttp3;
 
-import java.util.concurrent.TimeUnit;
 import okhttp3.internal.http.HttpHeaders;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * A Cache-Control header with cache directives from a server or client. These directives set policy
@@ -15,6 +16,7 @@ public final class CacheControl {
    * Cache control request directives that require network validation of responses. Note that such
    * requests may be assisted by the cache via conditional GET requests.
    */
+  //强制从网络中获取
   public static final CacheControl FORCE_NETWORK = new Builder().noCache().build();
 
   /**
@@ -22,6 +24,7 @@ public final class CacheControl {
    * stale. If the response isn't available in the cache or requires server validation, the call
    * will fail with a {@code 504 Unsatisfiable Request}.
    */
+  //强制从缓存中获取
   public static final CacheControl FORCE_CACHE = new Builder()
       .onlyIfCached()
       .maxStale(Integer.MAX_VALUE, TimeUnit.SECONDS)

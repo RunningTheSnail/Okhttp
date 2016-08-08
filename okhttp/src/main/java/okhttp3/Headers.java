@@ -17,18 +17,10 @@
 
 package okhttp3;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import okhttp3.internal.Util;
 import okhttp3.internal.http.HttpDate;
+
+import java.util.*;
 
 /**
  * The header fields of a single HTTP message. Values are uninterpreted strings; use {@code Request}
@@ -237,6 +229,7 @@ public final class Headers {
   }
 
   public static final class Builder {
+    //存储请求头
     private final List<String> namesAndValues = new ArrayList<>(20);
 
     /**

@@ -15,243 +15,257 @@
  */
 package okhttp3;
 
+import okhttp3.internal.http.HttpMethod;
+
 import java.net.URL;
 import java.util.List;
-import okhttp3.internal.http.HttpMethod;
 
 /**
  * An HTTP request. Instances of this class are immutable if their {@link #body} is null or itself
  * immutable.
  */
 public final class Request {
-  private final HttpUrl url;
-  private final String method;
-  private final Headers headers;
-  private final RequestBody body;
-  private final Object tag;
+    //服务器地址
+    private final HttpUrl url;
+    //请求方式
+    private final String method;
+    //请求头
+    private final Headers headers;
+    //请求体
+    private final RequestBody body;
+    //标志该请求
+    private final Object tag;
 
-  private volatile CacheControl cacheControl; // Lazily initialized.
+    //请求头,缓存方面
+    private volatile CacheControl cacheControl; // Lazily initialized.
 
-  private Request(Builder builder) {
-    this.url = builder.url;
-    this.method = builder.method;
-    this.headers = builder.headers.build();
-    this.body = builder.body;
-    this.tag = builder.tag != null ? builder.tag : this;
-  }
-
-  public HttpUrl url() {
-    return url;
-  }
-
-  public String method() {
-    return method;
-  }
-
-  public Headers headers() {
-    return headers;
-  }
-
-  public String header(String name) {
-    return headers.get(name);
-  }
-
-  public List<String> headers(String name) {
-    return headers.values(name);
-  }
-
-  public RequestBody body() {
-    return body;
-  }
-
-  public Object tag() {
-    return tag;
-  }
-
-  public Builder newBuilder() {
-    return new Builder(this);
-  }
-
-  /**
-   * Returns the cache control directives for this response. This is never null, even if this
-   * response contains no {@code Cache-Control} header.
-   */
-  public CacheControl cacheControl() {
-    CacheControl result = cacheControl;
-    return result != null ? result : (cacheControl = CacheControl.parse(headers));
-  }
-
-  public boolean isHttps() {
-    return url.isHttps();
-  }
-
-  @Override public String toString() {
-    return "Request{method="
-        + method
-        + ", url="
-        + url
-        + ", tag="
-        + (tag != this ? tag : null)
-        + '}';
-  }
-
-  public static class Builder {
-    private HttpUrl url;
-    private String method;
-    private Headers.Builder headers;
-    private RequestBody body;
-    private Object tag;
-
-    public Builder() {
-      this.method = "GET";
-      this.headers = new Headers.Builder();
+    private Request(Builder builder) {
+        this.url = builder.url;
+        this.method = builder.method;
+        this.headers = builder.headers.build();
+        this.body = builder.body;
+        this.tag = builder.tag != null ? builder.tag : this;
     }
 
-    private Builder(Request request) {
-      this.url = request.url;
-      this.method = request.method;
-      this.body = request.body;
-      this.tag = request.tag;
-      this.headers = request.headers.newBuilder();
+    public HttpUrl url() {
+        return url;
     }
 
-    public Builder url(HttpUrl url) {
-      if (url == null) throw new NullPointerException("url == null");
-      this.url = url;
-      return this;
+    public String method() {
+        return method;
+    }
+
+    public Headers headers() {
+        return headers;
+    }
+
+    public String header(String name) {
+        return headers.get(name);
+    }
+
+    public List<String> headers(String name) {
+        return headers.values(name);
+    }
+
+    public RequestBody body() {
+        return body;
+    }
+
+    public Object tag() {
+        return tag;
+    }
+
+    public Builder newBuilder() {
+        return new Builder(this);
     }
 
     /**
-     * Sets the URL target of this request.
-     *
-     * @throws IllegalArgumentException if {@code url} is not a valid HTTP or HTTPS URL. Avoid this
-     * exception by calling {@link HttpUrl#parse}; it returns null for invalid URLs.
+     * Returns the cache control directives for this response. This is never null, even if this
+     * response contains no {@code Cache-Control} header.
      */
-    public Builder url(String url) {
-      if (url == null) throw new NullPointerException("url == null");
-
-      // Silently replace websocket URLs with HTTP URLs.
-      if (url.regionMatches(true, 0, "ws:", 0, 3)) {
-        url = "http:" + url.substring(3);
-      } else if (url.regionMatches(true, 0, "wss:", 0, 4)) {
-        url = "https:" + url.substring(4);
-      }
-
-      HttpUrl parsed = HttpUrl.parse(url);
-      if (parsed == null) throw new IllegalArgumentException("unexpected url: " + url);
-      return url(parsed);
+    public CacheControl cacheControl() {
+        //优先考虑设置的CacheControl
+        CacheControl result = cacheControl;
+        //解析headers中的缓存请求头
+        return result != null ? result : (cacheControl = CacheControl.parse(headers));
     }
 
-    /**
-     * Sets the URL target of this request.
-     *
-     * @throws IllegalArgumentException if the scheme of {@code url} is not {@code http} or {@code
-     * https}.
-     */
-    public Builder url(URL url) {
-      if (url == null) throw new NullPointerException("url == null");
-      HttpUrl parsed = HttpUrl.get(url);
-      if (parsed == null) throw new IllegalArgumentException("unexpected url: " + url);
-      return url(parsed);
+    public boolean isHttps() {
+        return url.isHttps();
     }
 
-    /**
-     * Sets the header named {@code name} to {@code value}. If this request already has any headers
-     * with that name, they are all replaced.
-     */
-    public Builder header(String name, String value) {
-      headers.set(name, value);
-      return this;
+    @Override
+    public String toString() {
+        return "Request{method="
+                + method
+                + ", url="
+                + url
+                + ", tag="
+                + (tag != this ? tag : null)
+                + '}';
     }
 
-    /**
-     * Adds a header with {@code name} and {@code value}. Prefer this method for multiply-valued
-     * headers like "Cookie".
-     *
-     * <p>Note that for some headers including {@code Content-Length} and {@code Content-Encoding},
-     * OkHttp may replace {@code value} with a header derived from the request body.
-     */
-    public Builder addHeader(String name, String value) {
-      headers.add(name, value);
-      return this;
-    }
+    public static class Builder {
+        private HttpUrl url;
+        private String method;
+        private Headers.Builder headers;
+        private RequestBody body;
+        private Object tag;
 
-    public Builder removeHeader(String name) {
-      headers.removeAll(name);
-      return this;
-    }
+        public Builder() {
+            this.method = "GET";
+            this.headers = new Headers.Builder();
+        }
 
-    /** Removes all headers on this builder and adds {@code headers}. */
-    public Builder headers(Headers headers) {
-      this.headers = headers.newBuilder();
-      return this;
-    }
+        private Builder(Request request) {
+            this.url = request.url;
+            this.method = request.method;
+            this.body = request.body;
+            this.tag = request.tag;
+            this.headers = request.headers.newBuilder();
+        }
 
-    /**
-     * Sets this request's {@code Cache-Control} header, replacing any cache control headers already
-     * present. If {@code cacheControl} doesn't define any directives, this clears this request's
-     * cache-control headers.
-     */
-    public Builder cacheControl(CacheControl cacheControl) {
-      String value = cacheControl.toString();
-      if (value.isEmpty()) return removeHeader("Cache-Control");
-      return header("Cache-Control", value);
-    }
+        public Builder url(HttpUrl url) {
+            if (url == null) throw new NullPointerException("url == null");
+            this.url = url;
+            return this;
+        }
 
-    public Builder get() {
-      return method("GET", null);
-    }
+        /**
+         * Sets the URL target of this request.
+         *
+         * @throws IllegalArgumentException if {@code url} is not a valid HTTP or HTTPS URL. Avoid this
+         *                                  exception by calling {@link HttpUrl#parse}; it returns null for invalid URLs.
+         */
+        public Builder url(String url) {
+            if (url == null) throw new NullPointerException("url == null");
 
-    public Builder head() {
-      return method("HEAD", null);
-    }
+            // Silently replace websocket URLs with HTTP URLs.
+            if (url.regionMatches(true, 0, "ws:", 0, 3)) {
+                url = "http:" + url.substring(3);
+            } else if (url.regionMatches(true, 0, "wss:", 0, 4)) {
+                url = "https:" + url.substring(4);
+            }
 
-    public Builder post(RequestBody body) {
-      return method("POST", body);
-    }
+            HttpUrl parsed = HttpUrl.parse(url);
+            if (parsed == null) throw new IllegalArgumentException("unexpected url: " + url);
+            return url(parsed);
+        }
 
-    public Builder delete(RequestBody body) {
-      return method("DELETE", body);
-    }
+        /**
+         * Sets the URL target of this request.
+         *
+         * @throws IllegalArgumentException if the scheme of {@code url} is not {@code http} or {@code
+         *                                  https}.
+         */
+        public Builder url(URL url) {
+            if (url == null) throw new NullPointerException("url == null");
+            HttpUrl parsed = HttpUrl.get(url);
+            if (parsed == null) throw new IllegalArgumentException("unexpected url: " + url);
+            return url(parsed);
+        }
 
-    public Builder delete() {
-      return delete(RequestBody.create(null, new byte[0]));
-    }
+        /**
+         * Sets the header named {@code name} to {@code value}. If this request already has any headers
+         * with that name, they are all replaced.
+         */
+        //先删除在添加
+        public Builder header(String name, String value) {
+            headers.set(name, value);
+            return this;
+        }
 
-    public Builder put(RequestBody body) {
-      return method("PUT", body);
-    }
+        /**
+         * Adds a header with {@code name} and {@code value}. Prefer this method for multiply-valued
+         * headers like "Cookie".
+         * <p>
+         * <p>Note that for some headers including {@code Content-Length} and {@code Content-Encoding},
+         * OkHttp may replace {@code value} with a header derived from the request body.
+         */
+        //添加请求头
+        public Builder addHeader(String name, String value) {
+            headers.add(name, value);
+            return this;
+        }
 
-    public Builder patch(RequestBody body) {
-      return method("PATCH", body);
-    }
+        public Builder removeHeader(String name) {
+            headers.removeAll(name);
+            return this;
+        }
 
-    public Builder method(String method, RequestBody body) {
-      if (method == null) throw new NullPointerException("method == null");
-      if (method.length() == 0) throw new IllegalArgumentException("method.length() == 0");
-      if (body != null && !HttpMethod.permitsRequestBody(method)) {
-        throw new IllegalArgumentException("method " + method + " must not have a request body.");
-      }
-      if (body == null && HttpMethod.requiresRequestBody(method)) {
-        throw new IllegalArgumentException("method " + method + " must have a request body.");
-      }
-      this.method = method;
-      this.body = body;
-      return this;
-    }
+        /**
+         * Removes all headers on this builder and adds {@code headers}.
+         */
+        public Builder headers(Headers headers) {
+            this.headers = headers.newBuilder();
+            return this;
+        }
 
-    /**
-     * Attaches {@code tag} to the request. It can be used later to cancel the request. If the tag
-     * is unspecified or null, the request is canceled by using the request itself as the tag.
-     */
-    public Builder tag(Object tag) {
-      this.tag = tag;
-      return this;
-    }
+        /**
+         * Sets this request's {@code Cache-Control} header, replacing any cache control headers already
+         * present. If {@code cacheControl} doesn't define any directives, this clears this request's
+         * cache-control headers.
+         */
+        public Builder cacheControl(CacheControl cacheControl) {
+            String value = cacheControl.toString();
+            if (value.isEmpty()) return removeHeader("Cache-Control");
+            return header("Cache-Control", value);
+        }
 
-    public Request build() {
-      if (url == null) throw new IllegalStateException("url == null");
-      return new Request(this);
+        public Builder get() {
+            return method("GET", null);
+        }
+
+        public Builder head() {
+            return method("HEAD", null);
+        }
+
+        public Builder post(RequestBody body) {
+            return method("POST", body);
+        }
+
+        public Builder delete(RequestBody body) {
+            return method("DELETE", body);
+        }
+
+        public Builder delete() {
+            return delete(RequestBody.create(null, new byte[0]));
+        }
+
+        public Builder put(RequestBody body) {
+            return method("PUT", body);
+        }
+
+        public Builder patch(RequestBody body) {
+            return method("PATCH", body);
+        }
+
+        public Builder method(String method, RequestBody body) {
+            if (method == null) throw new NullPointerException("method == null");
+            if (method.length() == 0) throw new IllegalArgumentException("method.length() == 0");
+            if (body != null && !HttpMethod.permitsRequestBody(method)) {
+                throw new IllegalArgumentException("method " + method + " must not have a request body.");
+            }
+            if (body == null && HttpMethod.requiresRequestBody(method)) {
+                throw new IllegalArgumentException("method " + method + " must have a request body.");
+            }
+            this.method = method;
+            this.body = body;
+            return this;
+        }
+
+        /**
+         * Attaches {@code tag} to the request. It can be used later to cancel the request. If the tag
+         * is unspecified or null, the request is canceled by using the request itself as the tag.
+         */
+        public Builder tag(Object tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Request build() {
+            if (url == null) throw new IllegalStateException("url == null");
+            return new Request(this);
+        }
     }
-  }
 }
