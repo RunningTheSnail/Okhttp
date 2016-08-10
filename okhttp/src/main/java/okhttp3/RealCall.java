@@ -33,9 +33,11 @@ import static okhttp3.internal.platform.Platform.INFO;
 
 final class RealCall implements Call {
     private final OkHttpClient client;
+    //重试拦截器
     private final RetryAndFollowUpInterceptor retryAndFollowUpInterceptor;
 
     // Guarded by this.
+    //判断是否正在执行
     private boolean executed;
 
     /**
@@ -56,6 +58,7 @@ final class RealCall implements Call {
 
     @Override
     public Response execute() throws IOException {
+        //同步代码块,保证Call只会execute一次
         synchronized (this) {
             if (executed) throw new IllegalStateException("Already Executed");
             executed = true;
@@ -129,6 +132,7 @@ final class RealCall implements Call {
             return RealCall.this;
         }
 
+        //执行task
         @Override
         protected void execute() {
             boolean signalledCallback = false;
@@ -171,22 +175,24 @@ final class RealCall implements Call {
     private Response getResponseWithInterceptorChain() throws IOException {
         // Build a full stack of interceptors.
         List<Interceptor> interceptors = new ArrayList<>();
+        //获取为okhttp配置的拦截器
         interceptors.addAll(client.interceptors());
         //添加重连拦截器
         interceptors.add(retryAndFollowUpInterceptor);
         //完善Request
+        //补充各种Header
         interceptors.add(new BridgeInterceptor(client.cookieJar()));
         //缓存策略拦截器
         interceptors.add(new CacheInterceptor(client.internalCache()));
         interceptors.add(new ConnectInterceptor(client));
         if (!retryAndFollowUpInterceptor.isForWebSocket()) {
+            //添加NetWork拦截器
             interceptors.addAll(client.networkInterceptors());
         }
-        interceptors.add(new CallServerInterceptor(
-                retryAndFollowUpInterceptor.isForWebSocket()));
+        //回调responseCallBack
+        interceptors.add(new CallServerInterceptor(retryAndFollowUpInterceptor.isForWebSocket()));
 
-        Interceptor.Chain chain = new RealIntedrceptorChain(
-                interceptors, null, null, null, 0, originalRequest);
+        Interceptor.Chain chain = new RealInterceptorChain(interceptors, null, null, null, 0, originalRequest);
         return chain.proceed(originalRequest);
     }
 }

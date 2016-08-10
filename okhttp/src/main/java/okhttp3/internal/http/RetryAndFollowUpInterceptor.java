@@ -15,6 +15,14 @@
  */
 package okhttp3.internal.http;
 
+import okhttp3.*;
+import okhttp3.internal.connection.RouteException;
+import okhttp3.internal.connection.StreamAllocation;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.HttpRetryException;
@@ -22,29 +30,8 @@ import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.SocketTimeoutException;
 import java.security.cert.CertificateException;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSocketFactory;
-import okhttp3.Address;
-import okhttp3.CertificatePinner;
-import okhttp3.Connection;
-import okhttp3.HttpUrl;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.Route;
-import okhttp3.internal.connection.RouteException;
-import okhttp3.internal.connection.StreamAllocation;
 
-import static java.net.HttpURLConnection.HTTP_CLIENT_TIMEOUT;
-import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
-import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
-import static java.net.HttpURLConnection.HTTP_MULT_CHOICE;
-import static java.net.HttpURLConnection.HTTP_PROXY_AUTH;
-import static java.net.HttpURLConnection.HTTP_SEE_OTHER;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
+import static java.net.HttpURLConnection.*;
 import static okhttp3.internal.Util.closeQuietly;
 import static okhttp3.internal.http.StatusLine.HTTP_PERM_REDIRECT;
 import static okhttp3.internal.http.StatusLine.HTTP_TEMP_REDIRECT;
@@ -62,6 +49,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
 
   private final OkHttpClient client;
   private StreamAllocation streamAllocation;
+  //webSocket
   private boolean forWebSocket;
   private volatile boolean canceled;
 
