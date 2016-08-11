@@ -31,7 +31,7 @@ public final class RealInterceptorChain implements Interceptor.Chain {
     private final HttpCodec httpCodec;
     private final Connection connection;
     private final int index;
-    //原始请求
+    //经过拦截器的请求
     private final Request request;
     private int calls;
 
@@ -85,8 +85,7 @@ public final class RealInterceptorChain implements Interceptor.Chain {
         }
 
         // Call the next interceptor in the chain.
-        RealInterceptorChain next = new RealInterceptorChain(
-                interceptors, streamAllocation, httpCodec, connection, index + 1, request);
+        RealInterceptorChain next = new RealInterceptorChain(interceptors, streamAllocation, httpCodec, connection, index + 1, request);
         Interceptor interceptor = interceptors.get(index);
         Response response = interceptor.intercept(next);
 

@@ -175,7 +175,7 @@ final class RealCall implements Call {
     private Response getResponseWithInterceptorChain() throws IOException {
         // Build a full stack of interceptors.
         List<Interceptor> interceptors = new ArrayList<>();
-        //获取为okhttp配置的拦截器
+        //获取为OkHttp配置的拦截器
         interceptors.addAll(client.interceptors());
         //添加重连拦截器
         interceptors.add(retryAndFollowUpInterceptor);

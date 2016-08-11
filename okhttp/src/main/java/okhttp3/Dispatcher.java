@@ -73,6 +73,7 @@ public final class Dispatcher {
     public synchronized ExecutorService executorService() {
         if (executorService == null) {
             //线程池,核心线程0个,总线程Integer.MAX_VALUE,空闲时间60秒,任务多花费时间少
+            //补充:线程池四种常用策略策略
             //工厂模式生产线程
             executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(), Util.threadFactory("OkHttp Dispatcher", false));
@@ -151,6 +152,7 @@ public final class Dispatcher {
      * Cancel all calls currently enqueued or executing. Includes calls executed both {@linkplain
      * Call#execute() synchronously} and {@linkplain Call#enqueue asynchronously}.
      */
+    //取消请求
     public synchronized void cancelAll() {
         for (AsyncCall call : readyAsyncCalls) {
             call.get().cancel();
@@ -165,16 +167,23 @@ public final class Dispatcher {
         }
     }
 
+    //主要目的预备队列(新鲜血液)=>runningCall
     private void promoteCalls() {
+        //池子满了
         if (runningAsyncCalls.size() >= maxRequests) return; // Already running max capacity.
+        //资源空了
         if (readyAsyncCalls.isEmpty()) return; // No ready calls to promote.
 
+        //对数据进行删除,使用迭代器遍历
         for (Iterator<AsyncCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
             AsyncCall call = i.next();
-
+            //单个域名对应的请求数
             if (runningCallsForHost(call) < maxRequestsPerHost) {
+                //准备的队列移除一个
                 i.remove();
+                //运行的队列添加一个
                 runningAsyncCalls.add(call);
+                //执行
                 executorService().execute(call);
             }
 
@@ -185,6 +194,7 @@ public final class Dispatcher {
     /**
      * Returns the number of running calls that share a host with {@code call}.
      */
+    //计算单个域名限制的最大请求数
     private int runningCallsForHost(AsyncCall call) {
         int result = 0;
         for (AsyncCall c : runningAsyncCalls) {

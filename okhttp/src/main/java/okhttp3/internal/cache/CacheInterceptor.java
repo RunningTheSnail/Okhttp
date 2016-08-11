@@ -61,17 +61,19 @@ public final class CacheInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Response cacheCandidate = cache != null
-                ? cache.get(chain.request())
-                : null;
+        //先直接从缓存中拿数据
+        Response cacheCandidate = cache != null ? cache.get(chain.request()) : null;
 
         long now = System.currentTimeMillis();
 
+        //缓存策略
         CacheStrategy strategy = new CacheStrategy.Factory(now, chain.request(), cacheCandidate).get();
         Request networkRequest = strategy.networkRequest;
         Response cacheResponse = strategy.cacheResponse;
 
         if (cache != null) {
+            //追踪响应
+            //网络,缓存 击中几次
             cache.trackResponse(strategy);
         }
 
@@ -102,6 +104,7 @@ public final class CacheInterceptor implements Interceptor {
 
         Response networkResponse = null;
         try {
+            //拦截器链
             networkResponse = chain.proceed(networkRequest);
         } finally {
             // If we're crashing on I/O or otherwise, don't leak the cache body.
@@ -123,6 +126,7 @@ public final class CacheInterceptor implements Interceptor {
                 // Update the cache after combining headers but before stripping the
                 // Content-Encoding header (as performed by initContentStream()).
                 cache.trackConditionalCacheHit();
+                //更新缓存
                 cache.update(cacheResponse, response);
                 return response;
             } else {
@@ -155,6 +159,7 @@ public final class CacheInterceptor implements Interceptor {
 
         // Should we cache this response for this request?
         if (!CacheStrategy.isCacheable(userResponse, networkRequest)) {
+            //根据请求方式判断是否需要缓存
             if (HttpMethod.invalidatesCache(networkRequest.method())) {
                 try {
                     responseCache.remove(networkRequest);
