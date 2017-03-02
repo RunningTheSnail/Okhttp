@@ -47,13 +47,18 @@ public final class Dispatcher {
     /**
      * Ready async calls in the order they'll be run.
      */
+
+
     //准备执行的
+    //队列异步任务
     private final Deque<AsyncCall> readyAsyncCalls = new ArrayDeque<>();
 
     /**
      * Running asynchronous calls. Includes canceled calls that haven't finished yet.
      */
-    //正在执行
+
+
+    //正在执行异步任务
     private final Deque<AsyncCall> runningAsyncCalls = new ArrayDeque<>();
 
     /**
@@ -187,6 +192,7 @@ public final class Dispatcher {
                 executorService().execute(call);
             }
 
+            //判断运行的异步任务是否超过最大的请求数
             if (runningAsyncCalls.size() >= maxRequests) return; // Reached max capacity.
         }
     }
@@ -206,6 +212,8 @@ public final class Dispatcher {
     /**
      * Used by {@code Call#execute} to signal it is in-flight.
      */
+
+    //同步方法直接添加到队列中
     synchronized void executed(RealCall call) {
         runningSyncCalls.add(call);
     }
