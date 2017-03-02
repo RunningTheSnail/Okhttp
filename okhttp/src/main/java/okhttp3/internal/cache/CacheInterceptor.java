@@ -64,9 +64,11 @@ public final class CacheInterceptor implements Interceptor {
         //先直接从缓存中拿数据
         Response cacheCandidate = cache != null ? cache.get(chain.request()) : null;
 
+        //获取当前时间
         long now = System.currentTimeMillis();
 
         //缓存策略
+        //将缓存Response中有关缓存响应头数据全部解析出来
         CacheStrategy strategy = new CacheStrategy.Factory(now, chain.request(), cacheCandidate).get();
         Request networkRequest = strategy.networkRequest;
         Response cacheResponse = strategy.cacheResponse;
@@ -78,6 +80,7 @@ public final class CacheInterceptor implements Interceptor {
         }
 
         if (cacheCandidate != null && cacheResponse == null) {
+            //不是从缓存获取了,关闭Response
             closeQuietly(cacheCandidate.body()); // The cache candidate wasn't applicable. Close it.
         }
 
@@ -96,11 +99,15 @@ public final class CacheInterceptor implements Interceptor {
         }
 
         // If we don't need the network, we're done.
+
+        //还是从缓存中获取
         if (networkRequest == null) {
             return cacheResponse.newBuilder()
                     .cacheResponse(stripBody(cacheResponse))
                     .build();
         }
+
+        //从网络中获取
 
         Response networkResponse = null;
         try {
@@ -139,6 +146,7 @@ public final class CacheInterceptor implements Interceptor {
                 .networkResponse(stripBody(networkResponse))
                 .build();
 
+        //判断是否有相应体
         if (HttpHeaders.hasBody(response)) {
             CacheRequest cacheRequest = maybeCache(response, networkResponse.request(), cache);
             response = cacheWritingResponse(cacheRequest, response);

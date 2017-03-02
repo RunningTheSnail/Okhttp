@@ -213,12 +213,15 @@ public final class CacheStrategy {
 
             //缓存请求头
             CacheControl requestCaching = request.cacheControl();
-            //不缓存
-            //缓存请求头设置
+
+
+            //缓存请求头设置 noCache 直接从网络中读取
             if (requestCaching.noCache() || hasConditions(request)) {
                 return new CacheStrategy(request, null);
             }
 
+            //下面都是判断是否从缓存获取
+            //判断缓存是否过期
             long ageMillis = cacheResponseAge();
             long freshMillis = computeFreshnessLifetime();
 

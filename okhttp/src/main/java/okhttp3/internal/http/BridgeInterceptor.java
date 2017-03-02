@@ -38,6 +38,9 @@ import static okhttp3.internal.Util.hostHeader;
  * request. Then it proceeds to call the network. Finally it builds a user response from the network
  * response.
  */
+
+//完善请求头拦截器
+//自定义拦截器添加通用请求头可以参考该拦截器
 public final class BridgeInterceptor implements Interceptor {
     private final CookieJar cookieJar;
 
@@ -50,6 +53,7 @@ public final class BridgeInterceptor implements Interceptor {
         Request userRequest = chain.request();
         Request.Builder requestBuilder = userRequest.newBuilder();
 
+        //post方法
         RequestBody body = userRequest.body();
         if (body != null) {
             MediaType contentType = body.contentType();

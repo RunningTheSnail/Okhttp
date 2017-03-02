@@ -180,6 +180,7 @@ public final class HttpHeaders {
         List<Cookie> cookies = Cookie.parseAll(url, headers);
         if (cookies.isEmpty()) return;
 
+        //将cookie保存
         cookieJar.saveFromResponse(url, cookies);
     }
 

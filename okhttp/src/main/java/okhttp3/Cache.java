@@ -128,7 +128,8 @@ public final class Cache implements Closeable, Flushable {
     private static final int ENTRY_BODY = 1;
     private static final int ENTRY_COUNT = 2;
 
-    //组合or继承?
+    //组合模式
+    //装饰模式应该可以链接起来
     final InternalCache internalCache = new InternalCache() {
         @Override
         public Response get(Request request) throws IOException {
@@ -174,6 +175,7 @@ public final class Cache implements Closeable, Flushable {
         this(directory, maxSize, FileSystem.SYSTEM);
     }
 
+    //使用DiskLruCache实现磁盘缓存
     Cache(File directory, long maxSize, FileSystem fileSystem) {
         this.cache = DiskLruCache.create(fileSystem, directory, VERSION, ENTRY_COUNT, maxSize);
     }
@@ -189,6 +191,7 @@ public final class Cache implements Closeable, Flushable {
         Entry entry;
         try {
             snapshot = cache.get(key);
+            //表示不存在磁盘缓存
             if (snapshot == null) {
                 return null;
             }
@@ -198,16 +201,17 @@ public final class Cache implements Closeable, Flushable {
         }
 
         try {
-            //读取缓存文件文件
+            //读取缓存文件文件,okio ?
             entry = new Entry(snapshot.getSource(ENTRY_METADATA));
         } catch (IOException e) {
             Util.closeQuietly(snapshot);
             return null;
         }
 
+        //将文件转换成Response
         Response response = entry.response(snapshot);
 
-        //判断请求地址和请求方法
+        //判断请求地址,请求方法和请求头
         if (!entry.matches(request, response)) {
             Util.closeQuietly(response.body());
             return null;
